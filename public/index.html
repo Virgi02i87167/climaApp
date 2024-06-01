@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App del clima</title>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.css" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        #formulario {
+            padding: 10px;
+            background: white;
+            z-index: 1;
+        }
+
+        #mapa {
+            flex: 1;
+            width: 100%;
+        }
+
+        #info-clima {
+            padding: 10px;
+            background: white;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="formulario">
+        <input type="text" id="input-ubicacion" placeholder="Ingrese la ubicación">
+        <button onclick="obtenerClima()">Obtener clima</button>
+    </div>
+    <div id="info-clima"></div>
+    <div id="mapa"></div>
+
+    <script src='https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.js'></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js'></script>
+    <script>
+        mapboxgl.accessToken = 'pk.eyJ1Ijoid2lsbGl3b25rYSIsImEiOiJjbHdyYnVhMDIwOGd5MmlvZ3lsZnRsbTg0In0.bSSPmW9wZJj0mqVX6z3Wsg';
+        let mapa = new mapboxgl.Map({
+            container: 'mapa',
+            style: 'mapbox://styles/mapbox/streets-v11',
+            center: [-88.8965, 13.7941],
+            zoom: 10
+        });
+
+        function obtenerClima() {
+            var ubicacion = document.getElementById('input-ubicacion').value;
+            axios.post('/clima', { ubicacion: ubicacion })
+                .then(function (respuesta) {
+                    let clima = respuesta.data;
+                    document.getElementById('info-clima').innerHTML = `
+            <p>Temperatura: ${clima.temperatura} °C</p>
+            <p>Sensación térmica: ${clima.sensacion_termica} °C</p>
+            <p>Temp Mínima: ${clima.temp_min} °C</p>
+            <p>Temp Máxima: ${clima.temp_max} °C</p>
+            <p>Clima: ${clima.weather}</p>`;
+                    mapa.flyTo({
+                        center: [clima.longitud, clima.latitud]
+                    });
+                    new mapboxgl.Marker()
+                        .setLngLat([clima.longitud, clima.latitud])
+                        .addTo(mapa);
+                })
+                .catch(function (error) {
+                    console.error(error);
+                });
+        }
+    </script>
+</body>
+
+</html>
